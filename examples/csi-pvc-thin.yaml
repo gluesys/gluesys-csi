@@ -1,0 +1,12 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: pvc-thin
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gluesys-csi-thin
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 1Gi

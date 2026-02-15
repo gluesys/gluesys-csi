@@ -1,0 +1,13 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: csi-lvm-sc-thin
+provisioner: lvm.csi.gms.io
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+parameters:
+  type: thin
+  gms.io/thinpool: test_pool
+  gms.io/thinpoolSize: 10GiB
+  gms.io/networkZone: k8s_zone

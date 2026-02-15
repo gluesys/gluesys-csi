@@ -1,0 +1,73 @@
+{{- if .Values.controller.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gluesys-csi-controller
+  labels:
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    app: gluesys-csi-controller
+spec:
+  replicas: {{ .Values.controller.replicas }}
+  selector:
+    matchLabels:
+      app: gluesys-csi-controller
+  template:
+    metadata:
+      labels:
+        app: gluesys-csi-controller
+    spec:
+      imagePullSecrets:
+        - name: gitlab-regcred
+      serviceAccountName: gluesys-csi
+{{- if .Values.tolerations.controller }}
+      tolerations:
+{{ toYaml .Values.tolerations.controller | indent 8 }}
+{{- end }}
+{{- if .Values.nodeSelector.controller }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector.controller | indent 8 }}
+{{- end }}
+      containers:
+      - name: controller
+        image: "{{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}"
+        imagePullPolicy: {{ .Values.controller.image.pullPolicy }}
+        args:
+          - --log-level={{ .Values.lvm.logLevel }}
+          - --metrics-bind-address=:8080
+          - --health-probe-bind-address=:8081
+          - --storageVG={{ .Values.lvm.storageVG }}
+          - --storageVip={{ .Values.lvm.storageVIP }}
+          - --storageAuth={{ .Values.lvm.storageAuth }}
+          - --storagePort={{ .Values.lvm.storagePort }}
+          - --storageScheme={{ .Values.lvm.storageScheme }}
+          - --leader-elect={{ .Values.controller.leaderElection }}
+        env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+{{- with .Values.controller.resources }}
+        resources:
+{{ toYaml . | indent 10 }}
+{{- end }}
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
+      restartPolicy: Always
+{{- end }}

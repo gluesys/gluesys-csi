@@ -1,0 +1,119 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  # CRD Name: {plural}.{group}
+  name: logicalvolumes.gms.io
+spec:
+  # API Group: (/apis/gms.io/...)
+  group: gms.io
+  # Resource Name
+  names:
+    # kubectl get logicalvolume
+    kind: LogicalVolume
+    # kubectl get logicalvolumes
+    plural: logicalvolumes
+    # kubectl describe logicalvolume
+    singular: logicalvolume
+  scope: Cluster
+  # API version
+  versions:
+  - name: v1
+    # API Activate
+    served: true
+    # Persistent save
+    storage: true
+    # Status update
+    subresources:
+      status: {}
+    # API Data Structure
+    schema:
+      # OpenAPI v3 type schema (k8s standard)
+      openAPIV3Schema:
+        description: LogicalVolume is Schema for logicalvolumes API
+        type: object
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: LogicalVolumeSpec defines the desired state of LogicalVolume
+            type: object
+            properties:
+              name:
+                description: logical volume name
+                type: string
+              type:
+                description: logical volume type
+                type: string
+              size:
+                description: logical volume size (10Gi)
+                anyOf:
+                - type: integer
+                - type: string
+                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                x-kubernetes-int-or-string: true
+              pool:
+                description: thin pool name for thin volume type
+                type: string
+              poolSize:
+                description: thin pool size (10Gi)
+                anyOf:
+                - type: integer
+                - type: string
+                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                x-kubernetes-int-or-string: true
+              networkZone:
+                description: network zone for NFS sharing
+                type: string
+              source:
+                description: origin logical volume
+                type: string
+              source:
+                description: origin logical volume
+                type: string
+              isPreserved:
+                description: the logical volume should be preserved during deletion
+                type: boolean
+          status:
+            description: LogicalVolumeStatus defines the observed state of LogicalVolume
+            type: object
+            properties:
+              code:
+                description: gRPC Error Code
+                type: integer
+                format: int32
+              currentSize:
+                description: logical volume size (10Gi)
+                anyOf:
+                - type: integer
+                - type: string
+                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                x-kubernetes-int-or-string: true
+              volumeID:
+                description: CSI volume identifier
+                type: string
+              phase:
+                description: Phase of logical volume operation
+                type: string
+                enum:
+                - Creating
+                - Available
+                - Deleting
+                - Failed
+              message:
+                description: Human-readable message indicating details about current phase
+                type: string
+              isMaintenanced:
+                description: Indicates whether the volume is under maintenance
+                type: boolean
+                default: false

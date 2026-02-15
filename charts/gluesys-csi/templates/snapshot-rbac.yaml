@@ -1,0 +1,41 @@
+---
+{{- if .Values.rbac.create }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Values.lvm.volumeSnapshotClassStub }}-snapshotter
+rules:
+- apiGroups: ["snapshot.storage.k8s.io"]
+  resources:
+  # VolumeSnapshot objects created by k8s users
+  - volumesnapshots
+  # Update status field of VolumeSnapshot objects
+  - volumesnapshots/status
+  # VolumeSnapshotContent objects managed by external-snapshotter
+  - volumesnapshotcontents
+  # Update status field of VolumeSnapshotContent objects
+  - volumesnapshotcontents/status
+  # VolumeSnapshotClass objects used to select snapshot behavior
+  - volumesnapshotclasses
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - delete
+  - update
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Values.lvm.volumeSnapshotClassStub }}-snapshotter
+subjects:
+- kind: ServiceAccount
+  name: {{ .Values.lvm.storageClassStub }}
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: {{ .Values.lvm.volumeSnapshotClassStub }}-snapshotter
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}

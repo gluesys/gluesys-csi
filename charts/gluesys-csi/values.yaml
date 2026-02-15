@@ -1,0 +1,102 @@
+
+lvm:
+  # You will want to change this for read-only filesystems
+  # For example, in Talos OS, set this to "/var/etc/lvm"
+  hostWritePath: /etc/lvm
+
+  # these are primariliy for testing purposes
+  storageVG: csi-lvm
+  storageAuth: '{gms api token}'
+  storageVIP: '{vip}'
+  storagePort: 80
+  storageScheme: http
+  driverName: lvm.csi.gms.io
+  storageClassStub: gluesys-csi
+  volumeSnapshotClassStub: gluesys-csi-snapshot
+  logLevel: info
+
+rbac:
+  create: true
+  pspEnabled: true
+
+## enable, if you want to install storage classes with v0.3.x backward-compatible `csi-lvm-sc-*` names
+compat03x: false
+
+pluginImage:
+  repository: ghcr.io/gluesys/gluesys-csi
+  tag: v1.0.0
+  pullPolicy: Always
+  #pullPolicy: IfNotPresent
+
+controller:
+  enabled: true
+  image:
+    repository: ghcr.io/gluesys/gluesys-csi/controller
+    tag: v1.0.0
+    pullPolicy: Always
+  replicas: 1
+  resources: {}
+  leaderElection: false
+
+sidecarConnectionConfigs:
+  retryIntervalStart: 1m
+  retryIntervalMax: 15m
+  timeout: 30s
+
+sidecarImages:
+  attacher: k8s.gcr.io/sig-storage/csi-attacher:v3.5.0
+  livenessprobe: k8s.gcr.io/sig-storage/livenessprobe:v2.7.0
+  provisioner: k8s.gcr.io/sig-storage/csi-provisioner:v3.2.1
+  registrar: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.5.1
+  resizer: k8s.gcr.io/sig-storage/csi-resizer:v1.6.0
+  snapshotter: k8s.gcr.io/sig-storage/csi-snapshotter:v5.0.1
+kubernetes:
+  kubeletPath: /var/lib/kubelet
+
+volumeSnapshotClasses:
+  snapshot:
+    enabled: true
+    deletionPolicy: Delete
+    # This might be use with kasten
+    # If you wish to specify PVC as a Profile via Kasten,
+    # the PVC must have its namespace set to Kasten.
+    # e.g. "kubectl apply -f examples/csi-pvc-thin.yaml -n kasten"
+    #additionalAnnotations:
+    #  k10.kasten.io/is-snapshot-class: "true"
+
+storageClasses:
+  thin:
+    enabled: true
+    additionalAnnotations:
+      gms.io/thinpool: "thinpool"
+      gms.io/thinpoolSize: "10GiB"
+      gms.io/networkZone: "internal"
+    # this might be used to mark one of the StorageClasses as default:
+    # storageclass.kubernetes.io/is-default-class: "true"
+    reclaimPolicy: Delete
+
+nodeSelector:
+  plugin:
+  # node-role.kubernetes.io/master: ""
+  # Key name may need to be updated to 'node-role.kubernetes.io/control-plane'
+  # in the future
+  controller:
+  # node-role.kubernetes.io/master: ""
+  # Key name may need to be updated to 'node-role.kubernetes.io/control-plane'
+  # in the future
+
+tolerations:
+  plugin:
+  # - key: node-role.kubernetes.io/master
+  #   operator: Exists
+  #   effect: NoSchedule
+  # - key: node-role.kubernetes.io/control-plane
+  #   operator: Exists
+  #   effect: NoSchedule
+  controller:
+  # - key: node-role.kubernetes.io/master
+  #   operator: Exists
+  #   effect: NoSchedule
+  # - key: node-role.kubernetes.io/control-plane
+  #   operator: Exists
+  #   effect: NoSchedule

@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-restore
+spec:
+  restartPolicy: Always
+  tolerations:
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
+#  nodeSelector:
+#    kubernetes.io/hostname: localhost
+  containers:
+    - image: busybox:1.36
+      command: ["/bin/sh", "-c"]
+      args: [ "tail -f /dev/null" ]
+      name: busybox
+      volumeMounts:
+        - name: vol2
+          mountPath: /mnt/vol2
+  volumes:
+  - name: vol2
+    persistentVolumeClaim:
+      claimName: pvc-restore
