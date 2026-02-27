@@ -10,7 +10,7 @@ metadata:
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: gluesys-csi
+  name: {{ .Release.Name }}
   labels:
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
@@ -70,7 +70,7 @@ rules:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: gluesys-csi
+  name: {{ .Release.Name }}
   labels:
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
@@ -80,7 +80,7 @@ subjects:
     namespace: {{ .Release.Namespace }}
 roleRef:
   kind: ClusterRole
-  name: gluesys-csi
+  name: {{ .Release.Name }}
   apiGroup: rbac.authorization.k8s.io
 ---
 {{- if and .Values.rbac.pspEnabled (.Capabilities.APIVersions.Has "policy/v1beta1") }}
@@ -306,6 +306,11 @@ spec:
             fieldRef:
               apiVersion: v1
               fieldPath: spec.nodeName
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
         image: "{{ .Values.pluginImage.repository }}:{{ .Values.pluginImage.tag }}"
         imagePullPolicy: {{ .Values.pluginImage.pullPolicy }}
         livenessProbe:
@@ -314,10 +319,10 @@ spec:
             path: /healthz
             port: healthz
             scheme: HTTP
-          initialDelaySeconds: 10
-          periodSeconds: 2
+          initialDelaySeconds: 60
+          periodSeconds: 30
           successThreshold: 1
-          timeoutSeconds: 3
+          timeoutSeconds: 30
         ports:
         - containerPort: 9898
           name: healthz
